@@ -10,6 +10,7 @@ import sqlite3
 import time
 import threading
 import webbrowser
+
 # إنشاء مجلدات لتخزين الملفات
 if not os.path.exists("students"):
     os.makedirs("students")
@@ -69,9 +70,6 @@ class NotificationSystem:
         }
         
     def show_notification(self, title, message, notification_type="info", duration=3000):
-        if hasattr(self.page, 'dialog') and self.page.dialog:
-            self.page.dialog.open = False
-            
         notification = ft.AlertDialog(
             title=ft.Row([
                 ft.Icon(self.icon_map.get(notification_type, ft.icons.INFO)),
@@ -79,8 +77,7 @@ class NotificationSystem:
             ]),
             content=ft.Text(message),
             actions=[ft.TextButton("حسناً", on_click=lambda e: self.close_notification())],
-            actions_alignment=ft.MainAxisAlignment.END,
-            modal=True
+            actions_alignment=ft.MainAxisAlignment.END
         )
         
         self.page.dialog = notification
@@ -97,14 +94,11 @@ class NotificationSystem:
             threading.Thread(target=close_after_delay, daemon=True).start()
     
     def close_notification(self):
-        if hasattr(self.page, 'dialog') and self.page.dialog:
+        if self.page.dialog:
             self.page.dialog.open = False
             self.page.update()
     
     def show_toast(self, message, notification_type="info"):
-        if hasattr(self.page, 'snack_bar') and self.page.snack_bar:
-            self.page.snack_bar.open = False
-            
         self.page.snack_bar = ft.SnackBar(
             content=ft.Row([
                 ft.Icon(self.icon_map.get(notification_type, ft.icons.INFO)),
@@ -755,18 +749,15 @@ class App:
     
     def setup_page(self):
         self.page.title = "SmartAttendance"
-        color_scheme = ft.ColorScheme(
-            primary=ft.colors.TEAL,
-            secondary=ft.colors.CYAN,
-            surface=ft.colors.WHITE if not self.dark_mode else ft.colors.GREY_900,
-        )
-        
         self.page.theme = ft.Theme(
-            color_scheme=color_scheme,
+            color_scheme=ft.ColorScheme(
+                primary=ft.colors.TEAL,
+                secondary=ft.colors.CYAN,
+                surface=ft.colors.WHITE,
+            ),
             font_family="Tajawal"
         )
         self.page.theme_mode = ft.ThemeMode.LIGHT if not self.dark_mode else ft.ThemeMode.DARK
-        self.page.bgcolor = ft.colors.GREY_50 if not self.dark_mode else ft.colors.GREY_900
         self.page.scroll = ft.ScrollMode.AUTO
         self.page.window_width = 1200
         self.page.window_height = 800
@@ -776,6 +767,7 @@ class App:
         self.page.vertical_alignment = ft.MainAxisAlignment.START
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page.padding = 20
+        self.page.bgcolor = ft.colors.GREY_50 if not self.dark_mode else ft.colors.GREY_900
     
     def toggle_dark_mode(self, e=None):
         self.dark_mode = not self.dark_mode
@@ -819,11 +811,6 @@ class App:
         self.page.dialog = about_dialog
         about_dialog.open = True
         self.page.update()
-    
-    def close_dialog(self):
-        if hasattr(self.page, 'dialog') and self.page.dialog:
-            self.page.dialog.open = False
-            self.page.update()
     
     def show_settings_page(self, e=None):
         self.page.clean()
@@ -1337,7 +1324,7 @@ class App:
                     content=groups_list,
                     border_radius=10,
                     padding=10,
-                    bgcolor=ft.colors.WHITE if not self.dark_mode else ft.colors.GREY_800,
+                    bgcolor=ft.colors.WHITE,
                     shadow=ft.BoxShadow(
                         spread_radius=1,
                         blur_radius=5,
@@ -1593,7 +1580,7 @@ class App:
             border_radius=10,
             vertical_lines=ft.border.BorderSide(1, ft.colors.GREY_300),
             horizontal_lines=ft.border.BorderSide(1, ft.colors.GREY_300),
-            heading_row_color=ft.colors.GREY_200 if not self.dark_mode else ft.colors.GREY_800,
+            heading_row_color=ft.colors.GREY_200,
             heading_row_height=50,
             data_row_min_height=60,
             expand=True
@@ -1622,7 +1609,7 @@ class App:
                     content=students_table,
                     border_radius=10,
                     padding=10,
-                    bgcolor=ft.colors.WHITE if not self.dark_mode else ft.colors.GREY_800,
+                    bgcolor=ft.colors.WHITE,
                     shadow=ft.BoxShadow(
                         spread_radius=1,
                         blur_radius=5,
@@ -1884,7 +1871,6 @@ class App:
             return
         
         if self.system.evaluate_student(self.student_id, stars_int, notes, self.page):
-            self.notification.show_toast("تم حفظ التقييم بنجاح!", "success")
             self.manage_students_page()
 
     def delete_student(self, student_id):
@@ -2083,9 +2069,6 @@ class App:
             if self.system.record_attendance(student_id_int, self.page):
                 self.entry_student_id.value = ""
                 self.page.update()
-                student = next((s for s in self.system.students if s.id == student_id_int), None)
-                if student:
-                    self.notification.show_toast(f"تم تسجيل حضور الطالب {student.name}", "success")
         except ValueError:
             self.notification.show_toast("ID الطالب يجب أن يكون رقماً صحيحاً!", "error")
 
@@ -2132,14 +2115,6 @@ class App:
                 icon=ft.icons.CALENDAR_MONTH,
                 on_click=lambda e: self.pick_date(self.end_date_picker)
             )
-        )
-        
-        self.entry_report_id = ft.TextField(
-            label="ID الطالب",
-            prefix_icon=ft.icons.PERSON,
-            border_radius=10,
-            filled=True,
-            expand=True
         )
         
         form = ft.Card(
