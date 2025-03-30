@@ -11,6 +11,9 @@ import time
 import threading
 import webbrowser
 
+
+
+
 # إنشاء مجلدات لتخزين الملفات
 if not os.path.exists("students"):
     os.makedirs("students")
