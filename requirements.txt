@@ -1,6 +1,6 @@
 flet
 qrcode
-opencv-python
+opencv
 pyzbar
 pandas
 sqlite3
